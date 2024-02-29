@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "csse6400-week1-practical"
+name = "2024-p2"
 version = "0.1.0"
 description = ""
 authors = ["Brook Queree <github.com/bhq12>"]
