@@ -76,7 +76,9 @@ class TestTodo(TodoTest):
         self.assertEqual(response.status_code, 404)
  
     def test_get_items_empty(self):
+        print('calling get')
         response = self.client.get('/api/v1/todos')
+        print('called get')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, [])
 

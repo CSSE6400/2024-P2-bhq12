@@ -55,7 +55,8 @@ class ToDoDatabaseHelper():
 
 
 
-    def get_all_todos(self):
+    def get_all_todos(self, completed_filter = None):
+        print('calling get_all_todos')
         connection = sqlite3.connect(self.db_location)
         connection.set_trace_callback(print)
         cursor = connection.cursor()
@@ -64,7 +65,7 @@ class ToDoDatabaseHelper():
         with open(f'{self.sql_files_location}/get_all_todos.sql') as file:
             get_todos_sql = file.read()
 
-        cursor.execute(get_todos_sql)
+        cursor.execute(get_todos_sql, (completed_filter,))
         result = []
         for row in cursor:
             result.append(self.dict_factory(cursor, row))
