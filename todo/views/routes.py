@@ -11,13 +11,18 @@ def health():
 @api.route('/todos', methods=['GET'])
 def get_todos():
     completed_filter = None
+    window_filter = None
     if 'completed' in request.args: 
         if completed_arg == 'true':
             completed_filter = 1
         if completed_arg == 'false':
             completed_filter = 0
+    if 'window' in request.args:
+        if request.args['window'].isdigit():
+            window_filter = int(request.args['window'])
+            
     database_helper = ToDoDatabaseHelper()
-    return jsonify(database_helper.get_all_todos(completed_filter))
+    return jsonify(database_helper.get_all_todos(completed_filter, window_filter))
 
 @api.route('/todos/<int:id>', methods=['GET'])
 def get_todo(id: int):
