@@ -32,6 +32,29 @@ class ToDoDatabaseHelper():
         cursor.close()
         connection.close()
 
+
+    ## HERE FOR UNIT TESTS AGAINST MEMORY DATABASE ONLY
+    def _instantiate_database_tables_from_scratch_CAREFUL(self):
+        connection = sqlite3.connect(self.db_location)
+        connection.set_trace_callback(print)
+        cursor = connection.cursor()
+        table_sql = ''
+        with open(f'{self.sql_files_location}/drop_table_todo.sql') as file:
+            table_sql = file.read()
+
+        cursor.execute(table_sql)
+
+        table_sql = ''
+        with open(f'{self.sql_files_location}/create_table_todo.sql') as file:
+            table_sql = file.read()
+
+        cursor.execute(table_sql)
+        print('Instantiated tables')
+        cursor.close()
+        connection.close()
+
+
+
     def get_all_todos(self):
         connection = sqlite3.connect(self.db_location)
         connection.set_trace_callback(print)
@@ -66,6 +89,22 @@ class ToDoDatabaseHelper():
         connection.close()
         return new_todo_row_id
 
+    def insert_todo_with_id(self, id: int, title: str, description: str, completed: bool, deadline_at: str):
+        connection = sqlite3.connect(self.db_location) 
+        connection.set_trace_callback(print)
+        cursor = connection.cursor()
+        
+        todo_sql = ''
+        with open(f'{self.sql_files_location}/insert_todo_with_id.sql') as file:
+            todo_sql = file.read()
+
+        cursor.execute(todo_sql, (id, title, description, completed, deadline_at))
+
+        new_todo_row_id = id
+        cursor.close()
+        connection.commit()
+        connection.close()
+        return new_todo_row_id
 
     def update_todo(self, id: int, title: str, description: str, completed: bool, deadline_at: str):
         connection = sqlite3.connect(self.db_location) 

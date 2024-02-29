@@ -3,7 +3,7 @@ from .views.routes import api
 from .models.todo import ToDoDatabaseHelper
 import os
 
-def create_app(config_overrides: dict = None):
+def create_app(config_overrides: dict = {}):
     print('Create_app')
     app = Flask(__name__)    
     print('Flasked')
@@ -15,7 +15,12 @@ def create_app(config_overrides: dict = None):
     
     # Initialise the Database connection,
     # set up tables if not exists
+    print('instantiating database from create_app')
     database_helper = ToDoDatabaseHelper()
-    database_helper.instantiate_database_tables()
+    print(f'CONFIG OVERRIDES: {config_overrides}')
+    if config_overrides['TESTING'] is True:
+        database_helper._instantiate_database_tables_from_scratch_CAREFUL()
+    else:
+        database_helper.instantiate_database_tables()
 
     return app

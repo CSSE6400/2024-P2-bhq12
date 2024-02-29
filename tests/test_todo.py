@@ -1,5 +1,6 @@
 from tests.base import TodoTest
 from datetime import datetime, timedelta
+from todo.models.todo import ToDoDatabaseHelper
 
 TODO_1 = {
             "id": 1,
@@ -38,36 +39,37 @@ TODO_FUTURE_2 = {
 
 class TestTodo(TodoTest):
     def _populate_records(self, todos):
-        with self.app.app_context():
-            from todo.models import db
-            from todo.models.todo import Todo
-            for todo in todos:
-                todo = self._fake_json_to_todo(todo)
-                db.session.add(Todo(**todo))
-            db.session.commit()
+        # Instantiate tables if not exists
+        database_helper = ToDoDatabaseHelper()
 
-    def _fake_json_to_todo(self, fake):
-        result = {}
-        for key, value in fake.items():
-            copy = value
-            if key in ['created_at', 'updated_at', 'deadline_at']:
-                copy = datetime.fromisoformat(value)
-            result[key] = copy
-        return result
+        for todo in todos:
+            database_helper.insert_todo_with_id(todo['id'], todo['title'], todo['description'], todo['completed'], todo['deadline_at'])
+
+    def _cleanup_todos(self, todos):
+        print('instantiating db for _cleanup_todos')
+        database_helper = ToDoDatabaseHelper()
+
+        for todo in todos:
+            database_helper.delete_todo(todo['id'])
 
     def test_get_item(self):
-        self._populate_records([TODO_1])
+        todos = [TODO_1]
+        self._populate_records(todos)
 
         response = self.client.get('/api/v1/todos/1')
         self.assertEqual(response.status_code, 200)
         self.assertDictSubset(TODO_1, response.json)
 
+        self._cleanup_todos(todos)
+
     def test_get_item_multiple(self):
-        self._populate_records([TODO_1, TODO_2])
+        todos = [TODO_1, TODO_2]
+        self._populate_records(todos)
 
         response = self.client.get('/api/v1/todos/2')
         self.assertEqual(response.status_code, 200)
         self.assertDictSubset(TODO_2, response.json)
+        self._cleanup_todos(todos)
 
     def test_get_todo_not_found(self):
         response = self.client.get('/api/v1/todos/1')
@@ -79,24 +81,29 @@ class TestTodo(TodoTest):
         self.assertEqual(response.json, [])
 
     def test_get_items(self):
-        self._populate_records([TODO_1, TODO_2])
+        todos = [TODO_1, TODO_2]
+        self._populate_records(todos)
 
         response = self.client.get('/api/v1/todos')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json), 2)
         self.assertDictSubset(TODO_1, response.json[0])
         self.assertDictSubset(TODO_2, response.json[1])
+        self._cleanup_todos(todos)
 
     def test_get_items_completed(self):
-        self._populate_records([TODO_1, TODO_2])
+        todos = [TODO_1, TODO_2]
+        self._populate_records(todos)
 
         response = self.client.get('/api/v1/todos?completed=true')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json), 1)
         self.assertDictSubset(TODO_1, response.json[0])
+        self._cleanup_todos(todos)
 
     def test_get_items_window(self):
-        self._populate_records([TODO_1, TODO_2, TODO_FUTURE_1, TODO_FUTURE_2])
+        todos = [TODO_1, TODO_2, TODO_FUTURE_1, TODO_FUTURE_2]
+        self._populate_records(todos)
 
         response = self.client.get('/api/v1/todos?window=5')
         self.assertEqual(response.status_code, 200)
@@ -104,6 +111,7 @@ class TestTodo(TodoTest):
         self.assertDictSubset(TODO_1, response.json[0])
         self.assertDictSubset(TODO_2, response.json[1])
         self.assertDictSubset(TODO_FUTURE_1, response.json[2])
+        self._cleanup_todos(todos)
 
     def test_post_item_success(self):
         todo = TODO_1.copy()
@@ -119,6 +127,7 @@ class TestTodo(TodoTest):
         del todo['title']
         response = self.client.post('/api/v1/todos', json=todo)
         self.assertEqual(response.status_code, 400)
+
         
     def test_post_item_extra_field(self):
         todo = TODO_1.copy()
@@ -149,19 +158,23 @@ class TestTodo(TodoTest):
         self.assertIsNone(response.json['deadline_at'])
 
     def test_put_item_success(self):
-        self._populate_records([TODO_1])
+        todos = [TODO_1]
+        self._populate_records(todos)
 
         todo = {"title": "New Title"}
         response = self.client.put('/api/v1/todos/1', json=todo)
         self.assertEqual(response.status_code, 200)
         self.assertDictSubset(todo, response.json)
+        self._cleanup_todos(todos)
 
     def test_put_item_extra_field(self):
-        self._populate_records([TODO_1])
+        todos = [TODO_1]
+        self._populate_records(todos)
 
         todo = {"extra": "extra"}
         response = self.client.put('/api/v1/todos/1', json=todo)
         self.assertEqual(response.status_code, 400)
+        self._cleanup_todos(todos)
 
     def test_put_item_not_found(self):
         todo = {"title": "New Title"}
@@ -169,7 +182,8 @@ class TestTodo(TodoTest):
         self.assertEqual(response.status_code, 404)
 
     def test_put_item_change_id(self):
-        self._populate_records([TODO_1])
+        todos = [TODO_1]
+        self._populate_records(todos)
 
         todo = {"id": 2}
         response = self.client.put('/api/v1/todos/1', json=todo)
@@ -178,9 +192,11 @@ class TestTodo(TodoTest):
         response = self.client.get('/api/v1/todos/1')
         self.assertEqual(response.status_code, 200)
         self.assertDictSubset(TODO_1, response.json)
+        self._cleanup_todos(todos)
 
     def test_put_item_success_then_get(self):
-        self._populate_records([TODO_1])
+        todos = [TODO_1]
+        self._populate_records(todos)
 
         todo = {"title": "New Title"}
         response = self.client.put('/api/v1/todos/1', json=todo)
@@ -190,15 +206,18 @@ class TestTodo(TodoTest):
         response = self.client.get('/api/v1/todos/1')
         self.assertEqual(response.status_code, 200)
         self.assertDictSubset(todo, response.json)
+        self._cleanup_todos(todos)
 
     def test_delete_item_success(self):
-        self._populate_records([TODO_1])
+        todos = [TODO_1]
+        self._populate_records(todos)
 
         response = self.client.delete('/api/v1/todos/1')
         self.assertEqual(response.status_code, 200)
 
         response = self.client.get('/api/v1/todos/1')
         self.assertEqual(response.status_code, 404)
+        self._cleanup_todos(todos)
 
     def test_delete_item_not_found(self):
         response = self.client.delete('/api/v1/todos/1')

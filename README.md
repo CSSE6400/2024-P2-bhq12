@@ -7,6 +7,10 @@ Please see the [instructions](https://csse6400.uqcloud.net/practicals/week01.pdf
 
 There are [resources](https://www.makeareadme.com) available to help you write a good README file.
 
+# NOTE: 
+I hate ORM's with a passion so I chose not to. As such I had to update a few of the automated tests, but none of the core functionality was changed
+
+
 # GETTING STARTED
 
 You should have a recent python version installed (specifically python 3.10 or higher)
