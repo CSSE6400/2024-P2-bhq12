@@ -18,7 +18,7 @@ def create_app(config_overrides: dict = {}):
     print('instantiating database from create_app')
     database_helper = ToDoDatabaseHelper()
     print(f'CONFIG OVERRIDES: {config_overrides}')
-    if config_overrides['TESTING'] is True:
+    if 'TESTING' in config_overrides and config_overrides['TESTING'] is True:
         database_helper._instantiate_database_tables_from_scratch_CAREFUL()
     else:
         database_helper.instantiate_database_tables()
