@@ -13,9 +13,9 @@ def get_todos():
     completed_filter = None
     window_filter = None
     if 'completed' in request.args: 
-        if completed_arg == 'true':
+        if request.args['completed'] == 'true':
             completed_filter = 1
-        if completed_arg == 'false':
+        if request.args['completed'] == 'false':
             completed_filter = 0
     if 'window' in request.args:
         if request.args['window'].isdigit():
