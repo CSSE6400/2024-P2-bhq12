@@ -4,6 +4,7 @@ api = Blueprint('api', __name__, url_prefix='/api/v1')
 
 POST_RETURN_STATUS = 201
 EXPECTED_POST_KEYS = ['title', 'description', 'completed', 'deadline_at']
+REQUIRED_POST_KEYS = ['title']
 
 @api.route('/health')
 def health():
@@ -43,7 +44,7 @@ def create_todo():
     for key in request.json.keys():
         if key not in EXPECTED_POST_KEYS:
             abort(400)
-    for key in EXPECTED_POST_KEYS:
+    for key in REQUIRED_POST_KEYS:
         if key not in request.json:
             abort(400)
 
