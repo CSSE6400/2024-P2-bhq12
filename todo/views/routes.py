@@ -3,6 +3,7 @@ from todo.models.todo import ToDoDatabaseHelper
 api = Blueprint('api', __name__, url_prefix='/api/v1')
 
 POST_RETURN_STATUS = 201
+EXPECTED_POST_KEYS = ['title', 'description', 'completed', 'deadline_at']
 
 @api.route('/health')
 def health():
@@ -33,11 +34,17 @@ def get_todo(id: int):
     else:
         abort(404)
 
+
+
 @api.route('/todos', methods=['POST'])
 def create_todo():
+
     database_helper = ToDoDatabaseHelper()
     for key in request.json.keys():
-        if key not in ['title', 'description', 'completed', 'deadline_at']:
+        if key not in EXPECTED_POST_KEYS:
+            abort(400)
+    for key in EXPECTED_POST_KEYS:
+        if key not in request.json:
             abort(400)
 
     title = request.json.get('title')
